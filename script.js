@@ -1,218 +1,149 @@
-const navToggle = document.getElementById('navToggle');
-const navLinks  = document.getElementById('navLinks');
+const navToggle = document.getElementById("navToggle");
+const navLinks = document.getElementById("navLinks");
 
-navToggle.addEventListener('click', () => {
-  const isOpen = navLinks.classList.toggle('open');
-  navToggle.classList.toggle('open', isOpen);
-  navToggle.setAttribute('aria-expanded', String(isOpen));
-  document.body.style.overflow = isOpen ? 'hidden' : '';
-});
+if (navToggle && navLinks) {
+  navToggle.addEventListener("click", () => {
+    navLinks.classList.toggle("open");
+    navToggle.classList.toggle("open");
 
-// Close nav when a link is clicked
-navLinks.querySelectorAll('a').forEach(link => {
-  link.addEventListener('click', () => {
-    navLinks.classList.remove('open');
-    navToggle.classList.remove('open');
-    navToggle.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
+    const expanded = navToggle.classList.contains("open");
+    navToggle.setAttribute("aria-expanded", expanded);
   });
-});
 
+  document.querySelectorAll(".nav-links a").forEach(link => {
+    link.addEventListener("click", () => {
+      navLinks.classList.remove("open");
+      navToggle.classList.remove("open");
+      navToggle.setAttribute("aria-expanded", false);
+    });
+  });
+}
 
-// ── ACTIVE NAV LINK ON SCROLL ───────────────────────────────────────
-const sections = document.querySelectorAll('section[id], header[id]');
+const sections = document.querySelectorAll("section[id]");
 
-function updateActiveNav() {
-  const scrollY = window.scrollY;
+window.addEventListener("scroll", () => {
+  let current = "";
+
   sections.forEach(section => {
-    const top    = section.offsetTop - 100;
-    const bottom = top + section.offsetHeight;
-    const id     = section.getAttribute('id');
-    const link   = document.querySelector(`.nav-links a[href="#${id}"]`);
-    if (!link) return;
-    if (scrollY >= top && scrollY < bottom) {
-      link.style.color = 'var(--text)';
-    } else {
-      link.style.color = '';
+    const sectionTop = section.offsetTop - 120;
+
+    if (window.scrollY >= sectionTop) {
+      current = section.getAttribute("id");
     }
   });
-}
 
-window.addEventListener('scroll', updateActiveNav, { passive: true });
+  document.querySelectorAll(".nav-links a").forEach(link => {
+    link.classList.remove("active");
 
-
-// ── SCROLL REVEAL ───────────────────────────────────────────────────
-// Add .reveal class to elements we want to animate in
-const revealTargets = [
-  '.section-title', '.section-sub',
-  '.about-text', '.about-visual',
-  '.stat', '.skill-card', '.project-card',
-  '.contact-form', '.filter-bar'
-];
-
-revealTargets.forEach(selector => {
-  document.querySelectorAll(selector).forEach((el, i) => {
-    el.classList.add('reveal');
-    el.style.transitionDelay = `${i * 0.07}s`;
+    if (link.getAttribute("href").includes(current)) {
+      link.classList.add("active");
+    }
   });
 });
+
+const revealElements = document.querySelectorAll(
+  ".section-title, .section-sub, .skill-card, .project-card, .about-text, .about-visual"
+);
 
 const revealObserver = new IntersectionObserver(
-  (entries) => {
+  entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        revealObserver.unobserve(entry.target); // animate once
+        entry.target.classList.add("visible");
       }
     });
   },
-  { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+  {
+    threshold: 0.15
+  }
 );
 
-document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+revealElements.forEach(el => {
+  el.classList.add("reveal");
+  revealObserver.observe(el);
+});
 
+const skillBars = document.querySelectorAll(".skill-fill");
 
-// ── SKILL BAR ANIMATION ─────────────────────────────────────────────
-// Animate the bars when they scroll into view
-const skillBars = document.querySelectorAll('.skill-fill');
-
-const barObserver = new IntersectionObserver(
-  (entries) => {
+const skillObserver = new IntersectionObserver(
+  entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const bar   = entry.target;
-        const width = bar.dataset.width;
-        bar.style.width = width + '%';
-        barObserver.unobserve(bar);
+        const width = entry.target.dataset.width;
+        entry.target.style.width = width + "%";
       }
     });
   },
-  { threshold: 0.5 }
+  {
+    threshold: 0.4
+  }
 );
 
-skillBars.forEach(bar => barObserver.observe(bar));
+skillBars.forEach(bar => {
+  skillObserver.observe(bar);
+});
 
+const filterButtons = document.querySelectorAll(".filter-btn");
+const projects = document.querySelectorAll(".project-card");
 
-// ── PROJECT FILTER ──────────────────────────────────────────────────
-const filterBtns  = document.querySelectorAll('.filter-btn');
-const projectCards = document.querySelectorAll('.project-card');
+filterButtons.forEach(button => {
+  button.addEventListener("click", () => {
 
-filterBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    // Update active button
-    filterBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    filterButtons.forEach(btn => {
+      btn.classList.remove("active");
+    });
 
-    const filter = btn.dataset.filter;
+    button.classList.add("active");
 
-    projectCards.forEach(card => {
-      const tags = card.dataset.tags || '';
-      if (filter === 'all' || tags.includes(filter)) {
-        card.classList.remove('hidden');
-        // Re-trigger hover animation after un-hiding
-        card.style.animation = 'none';
-        requestAnimationFrame(() => { card.style.animation = ''; });
+    const filter = button.dataset.filter;
+
+    projects.forEach(project => {
+      const tags = project.dataset.tags;
+
+      if (filter === "all" || tags.includes(filter)) {
+        project.style.display = "flex";
       } else {
-        card.classList.add('hidden');
+        project.style.display = "none";
       }
     });
   });
 });
 
+const form = document.getElementById("contactForm");
 
-// ── CONTACT FORM VALIDATION ─────────────────────────────────────────
-const form       = document.getElementById('contactForm');
-const submitBtn  = document.getElementById('submitBtn');
-const btnText    = submitBtn.querySelector('.btn-text');
-const btnLoading = submitBtn.querySelector('.btn-loading');
-const formSuccess = document.getElementById('formSuccess');
+if (form) {
+  form.addEventListener("submit", e => {
+    e.preventDefault();
 
-function showError(inputId, errorId, message) {
-  const input = document.getElementById(inputId);
-  const error = document.getElementById(errorId);
-  input.classList.add('error');
-  error.textContent = message;
-}
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const message = document.getElementById("message").value.trim();
 
-function clearError(inputId, errorId) {
-  const input = document.getElementById(inputId);
-  const error = document.getElementById(errorId);
-  input.classList.remove('error');
-  error.textContent = '';
-}
+    if (name === "" || email === "" || message === "") {
+      alert("Please fill all fields.");
+      return;
+    }
 
-// Live validation — clear errors as user types
-['name', 'email', 'message'].forEach(id => {
-  const input = document.getElementById(id);
-  input.addEventListener('input', () => {
-    clearError(id, id + 'Error');
-  });
-});
-
-function validateForm() {
-  let valid = true;
-  const name    = document.getElementById('name').value.trim();
-  const email   = document.getElementById('email').value.trim();
-  const message = document.getElementById('message').value.trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!name) {
-    showError('name', 'nameError', 'Name is required.');
-    valid = false;
-  }
-  if (!email) {
-    showError('email', 'emailError', 'Email is required.');
-    valid = false;
-  } else if (!emailRegex.test(email)) {
-    showError('email', 'emailError', 'Please enter a valid email.');
-    valid = false;
-  }
-  if (!message) {
-    showError('message', 'messageError', 'Message cannot be empty.');
-    valid = false;
-  }
-  return valid;
-}
-
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-
-  // Clear previous errors
-  ['name', 'email', 'message'].forEach(id => clearError(id, id + 'Error'));
-  formSuccess.hidden = true;
-
-  if (!validateForm()) return;
-
-  // Simulate async send
-  btnText.hidden = true;
-  btnLoading.hidden = false;
-  submitBtn.disabled = true;
-
-  setTimeout(() => {
-    btnText.hidden = false;
-    btnLoading.hidden = true;
-    submitBtn.disabled = false;
-    formSuccess.hidden = false;
+    alert("Message sent successfully!");
     form.reset();
+  });
+}
 
-    // Scroll success into view
-    formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+const navbar = document.querySelector(".nav");
 
-    // Hide success after 5s
-    setTimeout(() => { formSuccess.hidden = true; }, 5000);
-  }, 1800);
+window.addEventListener("scroll", () => {
+  if (navbar) {
+    if (window.scrollY > 50) {
+      navbar.style.background = "rgba(8,8,16,0.98)";
+    } else {
+      navbar.style.background = "rgba(8,8,16,0.85)";
+    }
+  }
 });
 
-const nav = document.querySelector('.nav');
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 60) {
-    nav.style.background = 'rgba(8,8,16,0.97)';
-  } else {
-    nav.style.background = 'rgba(8,8,16,0.85)';
-  }
-}, { passive: true });
+const footerCopy = document.querySelector(".footer-copy");
 
-const yearEl = document.querySelector('.footer-copy');
-if (yearEl) {
-  yearEl.textContent = yearEl.textContent.replace('2025', new Date().getFullYear());
+if (footerCopy) {
+  footerCopy.innerHTML =
+    `© ${new Date().getFullYear()} Abhinav K G · Built with HTML, CSS & JavaScript`;
 }

@@ -876,3 +876,11 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   outline-offset: 4px;
   border-radius: 4px;
 }
+
+.nav-links a.active {
+  color: var(--accent);
+}
+
+.nav-links a.active::after {
+  width: 100%;
+}
